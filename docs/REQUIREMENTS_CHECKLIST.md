@@ -14,9 +14,9 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~TDD + unit/integration/e2e with edge cases expected~~
 - [x] ~~YAGNI: no auth/CORS/OWASP/extra frameworks unless Driver opens~~
 - [x] ~~Living checklist exists (`docs/REQUIREMENTS_CHECKLIST.md`)~~
-- [ ] Master + per-phase plans written under `docs/plans/` and approved
+- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0 approved; P1–P4 phase plans TBD)
 - [ ] `AI_USAGE.md` with honest point time estimates
-- [ ] README runbook (build, run on 8088, APIs, tests/harness)
+- [ ] README runbook (build, run on 8088, APIs, tests/harness) — minimal local-up notes in P0; full runbook P4
 
 ---
 
@@ -25,8 +25,8 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Java 21 + Spring Boot 3.x + Maven~~
 - [x] ~~Single Spring Boot deployable; packages ingest / apply / read~~
 - [x] ~~Scale by replicas of same artifact; no multi-module / microservices for exercise~~
-- [ ] Scaffold / phase 0 project created
-- [ ] Service listens on port **8088**
+- [x] ~~Scaffold / phase 0 project created~~
+- [x] ~~Service listens on port **8088**~~
 
 ---
 
@@ -37,7 +37,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Schema shape: `messages` + `rockets` (current-state) + `version` on rockets~~
 - [x] ~~Idempotency key `(channel, messageNumber)`; track applied numbers per channel~~
 - [x] ~~Prod note (docs only): Aurora-style writer + readers for GET~~
-- [ ] Postgres schema / migrations implemented
+- [x] ~~Postgres schema / migrations implemented~~
 - [ ] Durable message insert on accept
 - [ ] Rockets current-state projection updates on apply
 
@@ -108,10 +108,10 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 
 ## Harness / verification
 
-- [ ] Compatible with `./rockets launch "http://localhost:8088/messages"` (defaults)
+- [ ] Compatible with `./rockets/<platform>/rockets launch "http://localhost:8088/messages"` (defaults)
 - [ ] Unit tests: apply/reducer, idempotency, transitions
 - [ ] Integration tests: POST + GET against Spring / Testcontainers as needed
-- [ ] E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets`)
+- [ ] E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets/<platform>/rockets`)
 - [x] ~~Coverage bar **> 90%** (DECIDED)~~
 - [ ] Measured coverage > 90%
 

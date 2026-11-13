@@ -50,9 +50,10 @@ Also:
 | --- | --- | --- |
 | **P0** | Scaffold & DB | Runnable skeleton + migrations + claim surface |
 | **P1** | Ingest `POST /messages` | Schema validation, idempotent durable accept |
+| **P1.1** | Harness ingest smoke | Live `./rockets/<platform>/rockets` against `localhost:8088/messages`; load/reorder knobs |
 | **P2** | Apply scheduler | `SKIP LOCKED` claim, contiguous apply, multi-pod safe |
 | **P3** | Read APIs | `GET /rockets`, `GET /rockets/{id}` with sort |
-| **P4** | Verification + readiness | Coverage >90%, harness, README, `AI_USAGE`, checklist |
+| **P4** | Verification + readiness | Coverage >90%, repeat harness + read APIs, README, `AI_USAGE`, checklist |
 
 ---
 
@@ -124,6 +125,40 @@ Accept Lunar harness messages at `POST /messages`: validate envelope + per-type 
 
 ---
 
+## P1.1 — Harness ingest smoke (actual `./rockets/<platform>/rockets`)
+
+### Goal
+
+After P1 lands, run the **real Lunar harness binary** against a live app on **8088** to validate ingest under defaults and under stress/reorder — not only unit/integration tests. Pick the binary for the host (`./rockets/darwin_arm64/rockets` on Apple Silicon, `./rockets/darwin_amd64/rockets` on Intel Mac; Linux/Windows trees under `rockets/` similarly). Target URL: `http://localhost:8088/messages`.
+
+### Out of scope
+
+- Proving contiguous apply / rocket projection correctness (needs P2; full end-state checks wait for P4 with read APIs).
+- Coverage bar, README polish, `AI_USAGE` (P4).
+- Changing ingest contract; this phase is verification of P1 under the vendor harness.
+
+### Deliverables
+
+- Documented / repeatable local command(s), e.g.:
+  - `./rockets/darwin_arm64/rockets launch "http://localhost:8088/messages"` (defaults), or `./rockets/darwin_amd64/rockets` when appropriate.
+  - Same with **`--message-delay`** and **`--concurrency-level` varied beyond defaults** (defaults are typically `500ms` / `1`) to exercise faster delivery, parallel POSTs, and out-of-order arrival pressure on durable ingest.
+- Evidence that the harness completes without protocol failures (status policy / retries behave as SPEC expects for accept).
+- Brief note of knobs used and outcome (for checklist / later P4 re-run).
+
+### Test focus
+
+- Live harness: defaults + at least one higher-concurrency / tighter-delay (or otherwise non-default) run to validate ingestion under load and reorder.
+- Confirm app stays up; durable accept path does not lose owed work for later apply (rows / claim surface still coherent after runs).
+
+### Exit criteria
+
+- Vendor harness successfully drives `POST /messages` on localhost:8088 with chosen arch binary.
+- At least one run uses non-default `--message-delay` and/or `--concurrency-level` and still passes ingest acceptance.
+- Driver assess OK; commit only after Driver OK.
+- **P4** will **repeat** harness runs and additionally validate **read endpoints** once P2–P3 exist.
+
+---
+
 ## P2 — Apply scheduler
 
 ### Goal
@@ -192,7 +227,7 @@ Expose current rocket state: `GET /rockets` (list, empty → `200` + `[]`) and `
 
 ### Goal
 
-Close the quality and interview bar: measured coverage **> 90%**, harness-oriented verification, README runbook, honest `AI_USAGE.md`, living checklist complete for landed work. Document design trade-offs (incl. Aurora writer/readers prod note) for ~10 min breadth-first interview narrative.
+Close the quality and interview bar: measured coverage **> 90%**, **repeat** live harness verification (as in P1.1, with non-default `--message-delay` / `--concurrency-level` as needed), **and** validate **read endpoints** (`GET /rockets`, `GET /rockets/{id}`, sort) against applied state. README runbook, honest `AI_USAGE.md`, living checklist complete for landed work. Document design trade-offs (incl. Aurora writer/readers prod note) for ~10 min breadth-first interview narrative.
 
 ### Out of scope
 
@@ -202,19 +237,21 @@ Close the quality and interview bar: measured coverage **> 90%**, harness-orient
 ### Deliverables
 
 - Coverage report > 90% on agreed critical paths (ingest idempotency, ordering/apply, read APIs) and overall bar.
-- Unit + integration + e2e / harness-oriented suites (out-of-order + duplicates; optional `./rockets` when binary available).
+- Unit + integration + e2e suites (out-of-order + duplicates).
+- **Repeat** live `./rockets/darwin_arm64/rockets` (or `./rockets/darwin_amd64/rockets` / platform twin under `rockets/`) against `http://localhost:8088/messages`, including non-default delay/concurrency knobs; then assert read APIs match expected projection after apply.
 - README: build, run on **8088**, APIs, tests, harness; design/trade-off notes.
 - `AI_USAGE.md` with point time estimates.
 - `docs/REQUIREMENTS_CHECKLIST.md` brought current for all landed items.
 
 ### Test focus
 
-- Fill gaps to hit coverage bar; edge-case e2e; optional live `./rockets launch "http://localhost:8088/messages"`.
+- Fill gaps to hit coverage bar; edge-case e2e.
+- Live harness re-run (P1.1-style) **plus** read-API validation (list/get/sort vs applied rockets).
 
 ### Exit criteria
 
 - Coverage > 90% measured and recorded.
-- README + `AI_USAGE.md` + checklist ready for Driver assess / interview.
+- Harness re-run + read endpoints verified; README + `AI_USAGE.md` + checklist ready for Driver assess / interview.
 - No push without Driver OK; hand-in only when Driver authorizes.
 - Commit only after Driver OK.
 
@@ -225,7 +262,7 @@ Close the quality and interview bar: measured coverage **> 90%**, harness-orient
 ```
 Driver OK on this master plan
   → write P0 plan → Driver OK → implement → review → Driver assess → commit (msg OK)
-  → P1 … P4 (same loop)
+  → P1 → P1.1 (live harness ingest) → P2 → P3 → P4 (same loop; P4 repeats harness + read APIs)
   → push / hand-in only with Driver OK
 ```
 

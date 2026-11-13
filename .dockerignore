@@ -1,0 +1,13 @@
+.git
+.idea
+.vscode
+target
+**/target
+*.md
+docs
+rockets/
+.env
+.env.*
+.DS_Store
+*.log
+.cache
