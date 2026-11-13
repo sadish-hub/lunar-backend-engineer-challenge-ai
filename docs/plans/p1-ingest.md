@@ -8,7 +8,7 @@
 
 **Architecture:** Build on P0 (`messages`, `rockets`, `channel_work` via Flyway). Logic lives under package `com.lunar.rockets.ingest`. Ingest = short Postgres transaction: validate → insert `messages` (first-wins on PK) → upsert `channel_work` dirty → commit → **200**. Contiguous apply to `rockets` is **P2**. Live vendor harness smoke is **P1.1** (follows this phase). Read APIs are **P3**.
 
-**Tech stack (locked):** Java 21 · Spring Boot 3.x · Maven · Spring Web · Spring JDBC (or minimal Data JDBC) · Flyway schema from P0 · PostgreSQL · Testcontainers for IT
+**Tech stack (locked):** Java 21 · Spring Boot 3.x · Maven · Spring Web · Spring JDBC (or minimal Data JDBC) · Flyway schema from P0 · PostgreSQL · Testcontainers for IT · **networknt json-schema-validator** + classpath schemas under `src/main/resources/schemas/`
 
 **Depends on:** P0 scaffold + DB (schema + port **8088** + empty `ingest` package).
 
@@ -156,11 +156,19 @@ If the process dies after commit, `messages` row + `channel_work` dirty remain �
 Illustrative (names may vary slightly; seams locked):
 
 ```
+src/main/resources/schemas/
+  envelope.json                 # metadata + message envelope
+  RocketLaunched.json           # per-type message payloads
+  RocketSpeedIncreased.json
+  RocketSpeedDecreased.json
+  RocketExploded.json
+  RocketMissionChanged.json
+
 src/main/java/com/lunar/rockets/ingest/
   MessagesController.java       # POST /messages
   MessageEnvelope.java          # request DTO / records
   MessageType.java              # enum of five types
-  IngestValidator.java          # schema rules → 400
+  IngestValidator.java          # networknt JSON Schema → 400
   MessageIngestService.java     # txn: insert + channel_work upsert + first-wins
   IngestExceptionHandler.java   # map validation → 400; transient → 5xx (or @ControllerAdvice)
 
@@ -265,7 +273,7 @@ Execute only after Driver OK on this plan:
 
 ### Task 2: DTOs + validator + controller
 
-- [x] Envelope / type models; `IngestValidator`.
+- [x] Envelope / type models; `IngestValidator` (JSON Schema files + networknt).
 - [x] `POST /messages` controller mapping validation failures to **400**.
 
 ### Task 3: Durable ingest service

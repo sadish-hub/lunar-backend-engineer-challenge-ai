@@ -101,6 +101,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~`RocketSpeedIncreased` / `RocketSpeedDecreased` payload: `by`~~
 - [x] ~~`RocketExploded` payload: `reason`~~
 - [x] ~~`RocketMissionChanged` payload: `newMission`~~
+- [x] ~~Ingest validation via JSON Schema (`src/main/resources/schemas/`, networknt)~~
 - [ ] Out-of-order within channel handled via contiguous apply
 - [x] ~~At-least-once / redelivery on non-2xx respected~~
 

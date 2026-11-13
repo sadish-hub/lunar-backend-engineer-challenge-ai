@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunar.local/schemas/RocketLaunched.json",
+  "type": "object",
+  "required": ["type", "launchSpeed", "mission"],
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "launchSpeed": {
+      "type": "integer"
+    },
+    "mission": {
+      "type": "string"
+    }
+  }
+}

@@ -1,82 +1,61 @@
 package com.lunar.rockets.ingest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SchemaLocation;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
 
 @Component
 class IngestValidator {
+
+    private final ObjectMapper objectMapper;
+    private final JsonSchema envelopeSchema;
+    private final Map<MessageType, JsonSchema> messageSchemas;
+
+    IngestValidator(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+        this.envelopeSchema = load(factory, "classpath:schemas/envelope.json");
+        Map<MessageType, JsonSchema> schemas = new EnumMap<>(MessageType.class);
+        for (MessageType type : MessageType.values()) {
+            schemas.put(type, load(factory, "classpath:schemas/" + type.name() + ".json"));
+        }
+        this.messageSchemas = Map.copyOf(schemas);
+    }
 
     void validate(MessageEnvelope envelope) {
         if (envelope == null) {
             throw new IngestValidationException("envelope required");
         }
-        if (envelope.metadata() == null) {
-            throw new IngestValidationException("metadata required");
-        }
-        if (envelope.message() == null || envelope.message().isNull() || !envelope.message().isObject()) {
-            throw new IngestValidationException("message object required");
-        }
 
-        MessageMetadata metadata = envelope.metadata();
-        requirePresent(metadata.channel(), "channel");
-        parseUuid(metadata.channel());
-        if (metadata.messageNumber() == null) {
-            throw new IngestValidationException("messageNumber required");
-        }
-        requirePresent(metadata.messageTime(), "messageTime");
+        JsonNode node = objectMapper.valueToTree(envelope);
+        assertValid(envelopeSchema, node);
 
-        MessageType type = MessageType.from(metadata.messageType())
+        MessageType type = MessageType.from(envelope.metadata().messageType())
                 .orElseThrow(() -> new IngestValidationException("unknown or missing messageType"));
-
-        validatePayload(type, envelope.message());
+        assertValid(messageSchemas.get(type), envelope.message());
     }
 
-    private void validatePayload(MessageType type, JsonNode message) {
-        switch (type) {
-            case RocketLaunched -> {
-                requireText(message, "type");
-                requireIntegralNumber(message, "launchSpeed");
-                requireText(message, "mission");
-            }
-            case RocketSpeedIncreased, RocketSpeedDecreased -> {
-                long by = requireIntegralNumber(message, "by");
-                if (by < 0) {
-                    throw new IngestValidationException("by must be non-negative");
-                }
-            }
-            case RocketExploded -> requireText(message, "reason");
-            case RocketMissionChanged -> requireText(message, "newMission");
-        }
+    private static JsonSchema load(JsonSchemaFactory factory, String location) {
+        JsonSchema schema = factory.getSchema(SchemaLocation.of(location));
+        schema.initializeValidators();
+        return schema;
     }
 
-    private static void requirePresent(String value, String field) {
-        if (value == null || value.isBlank()) {
-            throw new IngestValidationException(field + " required");
+    private static void assertValid(JsonSchema schema, JsonNode node) {
+        Set<ValidationMessage> errors = schema.validate(
+                node,
+                executionContext -> executionContext.getExecutionConfig().setFormatAssertionsEnabled(true));
+        if (!errors.isEmpty()) {
+            throw new IngestValidationException(errors.iterator().next().getMessage());
         }
-    }
-
-    private static void parseUuid(String channel) {
-        try {
-            UUID.fromString(channel);
-        } catch (IllegalArgumentException ex) {
-            throw new IngestValidationException("channel must be a UUID");
-        }
-    }
-
-    private static void requireText(JsonNode message, String field) {
-        JsonNode node = message.get(field);
-        if (node == null || node.isNull() || !node.isTextual()) {
-            throw new IngestValidationException(field + " required");
-        }
-    }
-
-    private static long requireIntegralNumber(JsonNode message, String field) {
-        JsonNode node = message.get(field);
-        if (node == null || node.isNull() || !node.isIntegralNumber()) {
-            throw new IngestValidationException(field + " required as integer");
-        }
-        return node.asLong();
     }
 }

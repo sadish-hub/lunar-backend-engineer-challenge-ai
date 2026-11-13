@@ -20,7 +20,7 @@ class IngestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        validator = new IngestValidator();
+        validator = new IngestValidator(mapper);
     }
 
     @Test
