@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunar.local/schemas/envelope.json",
+  "type": "object",
+  "required": ["metadata", "message"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["channel", "messageNumber", "messageTime", "messageType"],
+      "properties": {
+        "channel": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "messageNumber": {
+          "type": "integer"
+        },
+        "messageTime": {
+          "type": "string",
+          "minLength": 1
+        },
+        "messageType": {
+          "type": "string",
+          "enum": [
+            "RocketLaunched",
+            "RocketSpeedIncreased",
+            "RocketSpeedDecreased",
+            "RocketExploded",
+            "RocketMissionChanged"
+          ]
+        }
+      }
+    },
+    "message": {
+      "type": "object"
+    }
+  }
+}

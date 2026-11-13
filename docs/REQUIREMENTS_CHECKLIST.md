@@ -14,7 +14,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~TDD + unit/integration/e2e with edge cases expected~~
 - [x] ~~YAGNI: no auth/CORS/OWASP/extra frameworks unless Driver opens~~
 - [x] ~~Living checklist exists (`docs/REQUIREMENTS_CHECKLIST.md`)~~
-- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0 approved; P1–P4 phase plans TBD)
+- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0–P1 approved; P1.1–P4 phase plans TBD)
 - [ ] `AI_USAGE.md` with honest point time estimates
 - [ ] README runbook (build, run on 8088, APIs, tests/harness) — minimal local-up notes in P0; full runbook P4
 
@@ -38,7 +38,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Idempotency key `(channel, messageNumber)`; track applied numbers per channel~~
 - [x] ~~Prod note (docs only): Aurora-style writer + readers for GET~~
 - [x] ~~Postgres schema / migrations implemented~~
-- [ ] Durable message insert on accept
+- [x] ~~Durable message insert on accept~~
 - [ ] Rockets current-state projection updates on apply
 
 ---
@@ -50,7 +50,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Multi-pod: Postgres claim `FOR UPDATE SKIP LOCKED`; per-channel exclusive apply~~
 - [x] ~~`rockets.version` optimistic concurrency~~
 - [x] ~~In-memory wake optional hint only (not correctness)~~
-- [ ] Implement durable ingest path
+- [x] ~~Implement durable ingest path~~
 - [ ] Implement async contiguous apply (poll/claim)
 - [ ] Multi-pod-safe claim path verified (or documented test)
 - [ ] Optional same-pod wake hint (if chosen)
@@ -68,7 +68,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~List sort: `sort=speed|mission|type` (or `sortBy`) + `order=asc|desc` (default asc); default by id/channel~~
 - [x] ~~**404** for unknown `GET /rockets/{id}`~~
 - [x] ~~No pagination~~
-- [ ] Implement `POST /messages`
+- [x] ~~Implement `POST /messages`~~
 - [ ] Implement `GET /rockets` (empty → `200` + `[]`)
 - [ ] Implement `GET /rockets/{id}`
 - [ ] Implement list sorting query params
@@ -85,9 +85,9 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~First-wins duplicates `(channel, messageNumber)` — 200, no re-apply, no 409~~
 - [x] ~~Negative `by` → 400; resulting speed may be ≤ 0 (no clamp)~~
 - [ ] Apply reducer / state machine implemented
-- [ ] Duplicate first-wins behavior implemented
+- [x] ~~Duplicate first-wins behavior implemented~~
 - [ ] Post-explode sticky + continue-apply implemented
-- [ ] Speed `by` validation + no-clamp arithmetic implemented
+- [x] ~~Speed `by` validation + no-clamp arithmetic implemented~~ (validation in P1; no-clamp apply arithmetic remains P2)
 
 **OPEN:** missing / late `RocketLaunched` (buffer vs invent); huge `by` / overflow (use long; document).
 
@@ -95,14 +95,15 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 
 ## Message envelope / types (BRIEF)
 
-- [ ] Accept JSON envelope with `metadata` + `message`
-- [ ] Required metadata: `channel`, `messageNumber`, `messageTime`, `messageType`
-- [ ] `RocketLaunched` payload: `type`, `launchSpeed`, `mission`
-- [ ] `RocketSpeedIncreased` / `RocketSpeedDecreased` payload: `by`
-- [ ] `RocketExploded` payload: `reason`
-- [ ] `RocketMissionChanged` payload: `newMission`
+- [x] ~~Accept JSON envelope with `metadata` + `message`~~
+- [x] ~~Required metadata: `channel`, `messageNumber`, `messageTime`, `messageType`~~
+- [x] ~~`RocketLaunched` payload: `type`, `launchSpeed`, `mission`~~
+- [x] ~~`RocketSpeedIncreased` / `RocketSpeedDecreased` payload: `by`~~
+- [x] ~~`RocketExploded` payload: `reason`~~
+- [x] ~~`RocketMissionChanged` payload: `newMission`~~
+- [x] ~~Ingest validation via JSON Schema (`src/main/resources/schemas/`, networknt)~~
 - [ ] Out-of-order within channel handled via contiguous apply
-- [ ] At-least-once / redelivery on non-2xx respected
+- [x] ~~At-least-once / redelivery on non-2xx respected~~
 
 ---
 
