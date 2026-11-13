@@ -14,7 +14,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~TDD + unit/integration/e2e with edge cases expected~~
 - [x] ~~YAGNI: no auth/CORS/OWASP/extra frameworks unless Driver opens~~
 - [x] ~~Living checklist exists (`docs/REQUIREMENTS_CHECKLIST.md`)~~
-- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0–P1 approved; P1.1–P4 phase plans TBD)
+- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0–P1.1 approved; P2–P4 phase plans TBD)
 - [ ] `AI_USAGE.md` with honest point time estimates
 - [ ] README runbook (build, run on 8088, APIs, tests/harness) — minimal local-up notes in P0; full runbook P4
 
@@ -109,7 +109,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 
 ## Harness / verification
 
-- [ ] Compatible with `./rockets/<platform>/rockets launch "http://localhost:8088/messages"` (defaults)
+- [x] ~~Compatible with `./rockets/<platform>/rockets launch "http://localhost:8088/messages"` (defaults)~~ (P1.1: `darwin_arm64`, BRIEF-style `500ms`/`1` + stress `50ms`/`8`; see `docs/plans/p1.1-harness-smoke.md` §3.7)
 - [ ] Unit tests: apply/reducer, idempotency, transitions
 - [ ] Integration tests: POST + GET against Spring / Testcontainers as needed
 - [ ] E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets/<platform>/rockets`)
