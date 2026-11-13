@@ -1,33 +1,87 @@
-# Lunar Backend Engineer Challenge
+# Lunar Rockets
+
+Harness-driven rocket state service for the Lunar backend engineer challenge: durable `POST /messages` ingest, async contiguous apply into a `rockets` projection, and `GET /rockets` reads.
 
 Challenge materials and working notes live under [`docs/`](docs/).
 
 - [Requirements](docs/REQUIREMENTS.md) — original challenge brief
-- [Brief](docs/BRIEF.md)
-- [Spec](docs/SPEC.md)
+- [Brief](docs/BRIEF.md) · [Spec](docs/SPEC.md)
 - [Requirements checklist](docs/REQUIREMENTS_CHECKLIST.md)
-- [Next steps](docs/NEXT_STEPS.md) — deferred prod trade-offs (e.g. wake-on-ingest)
+- [Plans](docs/plans/) · [Next steps](docs/NEXT_STEPS.md) (deferred wake-on-ingest)
+- [AI usage](AI_USAGE.md)
 
 See also [`AGENTS.md`](AGENTS.md) for agent guidance.
 
-## Local up (P0 scaffold)
+## Stack
 
-Requires Java 21, Docker, and Maven Wrapper (`./mvnw`).
+Java **21** · Spring Boot **3.x** · Maven Wrapper · Postgres **16** (Docker) · Flyway · JSON Schema validation (networknt) · Jacoco coverage gate · vendor harness under [`rockets/`](rockets/).
+
+Single Spring Boot deployable with package seams `ingest` / `apply` / `read` (not multi-module / microservices for this exercise).
+
+## Local up
+
+Requires Java 21, Docker, and `./mvnw`.
 
 ```bash
 make up          # Postgres on localhost:5432 (user/db/password: lunar)
-make test        # Testcontainers smoke + schema ITs
 make run         # Spring Boot on http://localhost:8088
-curl -s http://localhost:8088/actuator/health
+make smoke       # actuator health UP
+# or all-in-Docker:
+docker compose up -d --build   # app + Postgres; app on 8088
 ```
-
-All-in-Docker (optional): `docker compose up --build` (app + Postgres; app on **8088**).
 
 Default datasource: `jdbc:postgresql://localhost:5432/lunar` (override with `SPRING_DATASOURCE_*`).
 
-## Architecture / Apply concurrency
+## APIs
 
-Ingest is durable and first-wins; apply is async. Workers claim dirty channels with Postgres `FOR UPDATE SKIP LOCKED` so **one channel has one claimer**, while different channels can run in parallel across pods. Out-of-order message numbers stay buffered until the contiguous next MN is present (gap → release claim, stay dirty).
+| Method | Path | Notes |
+| --- | --- | --- |
+| `POST` | `/messages` | Always **200** on accept (including first-wins duplicates). **400** malformed / unknown type / negative `by`. **5xx** transient. |
+| `GET` | `/rockets` | Empty → `200` + `[]`. Sort: `sort=speed\|mission\|type` + `order=asc\|desc` (default asc). Default order by id. Invalid sort/order → **400**. |
+| `GET` | `/rockets/{id}` | Applied projection fields. Unknown → **404**. |
+
+Response fields: `id`, `type`, `speed`, `mission`, `exploded`, `explosionReason`.
+
+```bash
+curl -sS -X POST http://localhost:8088/messages -H 'Content-Type: application/json' -d @payload.json
+curl -sS 'http://localhost:8088/rockets?sort=speed&order=desc' | jq .
+curl -sS "http://localhost:8088/rockets/$ID" | jq .
+```
+
+## Tests & coverage
+
+```bash
+make test        # ./mvnw verify (unit + Testcontainers ITs + Jacoco report + LINE ≥ 90% check)
+make coverage    # same, then prints Jacoco LINE summary
+```
+
+Report: `target/site/jacoco/index.html` (and `jacoco.xml`). Coverage bar is measured **LINE** coverage **> 90%** (Jacoco `check` fails the build at ≤ 90%).
+
+Automated e2e-oriented IT covers out-of-order POST + duplicate first-wins → apply → GET (`OutOfOrderDuplicateApplyReadIT`).
+
+## Harness
+
+Platform trees under [`rockets/`](rockets/) ship the official challenge binaries. On Apple Silicon:
+
+```bash
+# pick binary: uname -m → arm64 ⇒ darwin_arm64; x86_64 ⇒ darwin_amd64
+./rockets/darwin_arm64/rockets launch "http://localhost:8088/messages" \
+  --max-messages=200
+# stress (non-default delay + concurrency):
+./rockets/darwin_arm64/rockets launch "http://localhost:8088/messages" \
+  --message-delay=50ms --concurrency-level=8 --max-messages=400
+```
+
+Wait for apply catch-up (`messages.applied = false` → 0 for contiguous harness sequences) before trusting GETs. P4 evidence: defaults + stress on `darwin_arm64` against compose app on **8088**, then `GET /rockets` length matched `rockets` rows, sample get-by-id matched DB, `sort=speed&order=desc` ordered, unknown id → **404**.
+
+## Design / trade-offs (interview anchors)
+
+- **Durable ingest → 200; async contiguous apply** (SPEC option 3 + B): short ingest txn inserts into `messages` and dirties `channel_work`; apply scheduler polls and projects into `rockets`.
+- **Multi-pod:** `FOR UPDATE SKIP LOCKED` claim on `channel_work` + `rockets.version` optimistic concurrency — one channel, one claimer; different channels parallel across pods.
+- **First-wins duplicates** on `(channel, messageNumber)`; **sticky explode** then continue applying later contiguous messages; **speed may be ≤ 0** (no clamp); negative `by` rejected at ingest (**400**).
+- **Single deployable** with `ingest` / `apply` / `read` packages.
+- **Prod note (docs only):** Aurora-style writer for ingest/apply + readers for GET when eventual consistency is acceptable — not implemented here.
+- **Deferred:** same-pod wake-on-ingest hint → [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
 
 ```mermaid
 sequenceDiagram
@@ -68,12 +122,11 @@ sequenceDiagram
   Note over DB: One channel = one claimer.<br/>Different channels can run on A and B in parallel.
 ```
 
-## Test harness
+## Known OPENs
 
-Platform trees under [`rockets/`](rockets/) (`darwin_*`, `linux_*`, `windows_*`) ship the official `rockets` challenge binaries from the assessment ZIP (~9MB each). They are committed so the harness is available without re-downloading.
+- Missing / late `RocketLaunched`: buffer vs invent — not invented here; non-launch before launch fails closed at apply.
+- Huge `by` / overflow: store and compute as `long`; document rather than invent UX.
 
-Example (Apple Silicon):
+## Interview narrative (~10 min breadth-first)
 
-```bash
-./rockets/darwin_arm64/rockets launch "http://localhost:8088/messages"
-```
+Problem (harness POSTs unordered rocket events) → durable ingest + first-wins → async contiguous apply with SKIP LOCKED → read APIs over `rockets` → verification (unit/IT matrix, measured Jacoco >90%, live harness defaults/stress + GET consistency). Depth hooks: claim exclusivity, sticky explode, gap wait, idempotent POST.

@@ -14,9 +14,9 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~TDD + unit/integration/e2e with edge cases expected~~
 - [x] ~~YAGNI: no auth/CORS/OWASP/extra frameworks unless Driver opens~~
 - [x] ~~Living checklist exists (`docs/REQUIREMENTS_CHECKLIST.md`)~~
-- [x] ~~Master + per-phase plans written under `docs/plans/` and approved (P0–P3 approved; P4 phase plan TBD)~~
-- [ ] `AI_USAGE.md` with honest point time estimates
-- [ ] README runbook (build, run on 8088, APIs, tests/harness) — minimal local-up notes in P0; full runbook P4
+- [x] ~~Master + per-phase plans written under `docs/plans/` and approved (P0–P4)~~
+- [x] ~~`AI_USAGE.md` with honest point time estimates~~
+- [x] ~~README runbook (build, run on 8088, APIs, tests/harness)~~
 
 ---
 
@@ -112,14 +112,14 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Compatible with `./rockets/<platform>/rockets launch "http://localhost:8088/messages"` (defaults)~~ (P1.1: `darwin_arm64`, BRIEF-style `500ms`/`1` + stress `50ms`/`8`; see `docs/plans/p1.1-harness-smoke.md` §3.7)
 - [x] ~~Unit tests: apply/reducer, idempotency, transitions~~ (apply/reducer + apply ITs in P2; ingest covered in P1)
 - [x] ~~Integration tests: POST + GET against Spring / Testcontainers as needed~~ (GET + apply→GET in P3 `RocketsReadIT`; POST covered in P1)
-- [ ] E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets/<platform>/rockets`)
+- [x] ~~E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets/<platform>/rockets`)~~ (`OutOfOrderDuplicateApplyReadIT` + P4 live `darwin_arm64` defaults/stress; see `docs/plans/p4-verification.md`)
 - [x] ~~Coverage bar **> 90%** (DECIDED)~~
-- [ ] Measured coverage > 90%
+- [x] ~~Measured coverage > 90%~~ (Jacoco LINE **96.55%**; `make coverage` / `target/site/jacoco/index.html`)
 
 ---
 
 ## Assessment / interview readiness (BRIEF process)
 
-- [ ] Design choices & trade-offs documented (README / plans)
-- [ ] Depth: concurrency, persistence, error handling explainable
-- [ ] Verification story clear for interview (~10 min breadth-first)
+- [x] ~~Design choices & trade-offs documented (README / plans)~~
+- [x] ~~Depth: concurrency, persistence, error handling explainable~~ (README + plans; SKIP LOCKED / first-wins / sticky explode)
+- [x] ~~Verification story clear for interview (~10 min breadth-first)~~

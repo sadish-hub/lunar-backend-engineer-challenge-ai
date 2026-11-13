@@ -1,4 +1,4 @@
-.PHONY: build test up down run migrate smoke
+.PHONY: build test coverage up down run migrate smoke
 
 MVN := ./mvnw
 
@@ -7,6 +7,10 @@ build:
 
 test:
 	$(MVN) verify
+
+coverage: test
+	@python3 -c 'import xml.etree.ElementTree as ET; c=ET.parse("target/site/jacoco/jacoco.xml").getroot().findall("counter"); line=next(x for x in c if x.get("type")=="LINE"); m,k=int(line.get("missed")),int(line.get("covered")); print(f"Jacoco LINE coverage={100*k/(m+k):.2f}% ({k}/{m+k})")'
+	@echo "Report: target/site/jacoco/index.html"
 
 up:
 	docker compose up -d postgres

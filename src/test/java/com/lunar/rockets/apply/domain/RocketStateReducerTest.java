@@ -99,5 +99,35 @@ class RocketStateReducerTest {
                         new ApplyCommand.SpeedIncreased(1L, 1L)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("before RocketLaunched");
+
+        assertThatThrownBy(() -> reducer.reduce(
+                        RocketState.empty(id),
+                        new ApplyCommand.Exploded(1L, "boom")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("before RocketLaunched");
+
+        assertThatThrownBy(() -> reducer.reduce(
+                        RocketState.empty(id),
+                        new ApplyCommand.MissionChanged(1L, "M")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("before RocketLaunched");
+    }
+
+    @Test
+    void secondLaunchAdvancesProgressWithoutOverwritingState() {
+        RocketState launched = reducer.reduce(
+                RocketState.empty(id),
+                new ApplyCommand.Launch(1L, "Falcon-9", 100L, "ARTEMIS"));
+        RocketState exploded = reducer.reduce(launched, new ApplyCommand.Exploded(2L, "boom"));
+
+        RocketState afterSecondLaunch = reducer.reduce(
+                exploded, new ApplyCommand.Launch(3L, "Other", 999L, "OTHER"));
+
+        assertThat(afterSecondLaunch.type()).isEqualTo("Falcon-9");
+        assertThat(afterSecondLaunch.speed()).isEqualTo(100L);
+        assertThat(afterSecondLaunch.mission()).isEqualTo("ARTEMIS");
+        assertThat(afterSecondLaunch.exploded()).isTrue();
+        assertThat(afterSecondLaunch.explosionReason()).isEqualTo("boom");
+        assertThat(afterSecondLaunch.lastAppliedNumber()).isEqualTo(3L);
     }
 }
