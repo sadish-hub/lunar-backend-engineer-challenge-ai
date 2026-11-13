@@ -1,5 +1,7 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.api;
 
+import com.lunar.rockets.ingest.service.MessageIngestService;
+import com.lunar.rockets.ingest.validation.IngestValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

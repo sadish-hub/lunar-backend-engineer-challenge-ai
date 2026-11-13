@@ -1,6 +1,6 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.api;
 
-record MessageMetadata(
+public record MessageMetadata(
         String channel,
         Long messageNumber,
         String messageTime,

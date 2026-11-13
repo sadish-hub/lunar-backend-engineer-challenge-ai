@@ -156,26 +156,19 @@ If the process dies after commit, `messages` row + `channel_work` dirty remain �
 Illustrative (names may vary slightly; seams locked):
 
 ```
-src/main/resources/schemas/
-  envelope.json                 # metadata + message envelope
-  RocketLaunched.json           # per-type message payloads
-  RocketSpeedIncreased.json
-  RocketSpeedDecreased.json
-  RocketExploded.json
-  RocketMissionChanged.json
+src/main/resources/schemas/          # JSON Schema (loaded by validation/)
+  envelope.json
+  RocketLaunched.json … RocketMissionChanged.json
 
 src/main/java/com/lunar/rockets/ingest/
-  MessagesController.java       # POST /messages
-  MessageEnvelope.java          # request DTO / records
-  MessageType.java              # enum of five types
-  IngestValidator.java          # networknt JSON Schema → 400
-  MessageIngestService.java     # txn: insert + channel_work upsert + first-wins
-  IngestExceptionHandler.java   # map validation → 400; transient → 5xx (or @ControllerAdvice)
+  api/           MessagesController, IngestExceptionHandler, MessageEnvelope/Metadata/Type
+  validation/    IngestValidator, IngestValidationException (networknt → 400)
+  persistence/   MessageIngestRepository (messages insert + channel_work dirty)
+  service/       MessageIngestService (txn orchestration)
 
 src/test/java/com/lunar/rockets/ingest/
-  IngestValidatorTest.java      # unit validation matrix
-  MessagesIngestIT.java         # MockMvc/WebTestClient + Testcontainers
-  MessagesConcurrencyIT.java    # parallel POSTs (optional separate class)
+  validation/IngestValidatorTest
+  api/MessagesIngestIT, MessagesConcurrencyIT, MessagesTransientErrorWebTest
 ```
 
 No changes required to `apply` / `read` beyond leaving them empty. No new Flyway version unless P0 schema is insufficient (it should not be — V1 already has `messages` + `channel_work`).

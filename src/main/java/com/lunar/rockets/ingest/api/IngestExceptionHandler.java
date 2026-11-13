@@ -1,5 +1,6 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.api;
 
+import com.lunar.rockets.ingest.validation.IngestValidationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,20 +9,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-class IngestExceptionHandler {
+public class IngestExceptionHandler {
 
     @ExceptionHandler(IngestValidationException.class)
-    ResponseEntity<Void> validation(IngestValidationException ignored) {
+    public ResponseEntity<Void> validation(IngestValidationException ignored) {
         return ResponseEntity.badRequest().build();
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    ResponseEntity<Void> unreadable(HttpMessageNotReadableException ignored) {
+    public ResponseEntity<Void> unreadable(HttpMessageNotReadableException ignored) {
         return ResponseEntity.badRequest().build();
     }
 
     @ExceptionHandler(DataAccessException.class)
-    ResponseEntity<Void> transientDataAccess(DataAccessException ignored) {
+    public ResponseEntity<Void> transientDataAccess(DataAccessException ignored) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
     }
 }

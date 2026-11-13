@@ -1,8 +1,9 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.lunar.rockets.ingest.api.MessageEnvelope;
+import com.lunar.rockets.ingest.persistence.MessageIngestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,45 +14,27 @@ import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 @Service
-class MessageIngestService {
+public class MessageIngestService {
 
-    private final JdbcTemplate jdbc;
+    private final MessageIngestRepository repository;
     private final ObjectMapper objectMapper;
 
-    MessageIngestService(JdbcTemplate jdbc, ObjectMapper objectMapper) {
-        this.jdbc = jdbc;
+    public MessageIngestService(MessageIngestRepository repository, ObjectMapper objectMapper) {
+        this.repository = repository;
         this.objectMapper = objectMapper;
     }
 
     @Transactional
-    void ingest(MessageEnvelope envelope) {
+    public void ingest(MessageEnvelope envelope) {
         UUID channel = UUID.fromString(envelope.metadata().channel());
         long messageNumber = envelope.metadata().messageNumber();
         String messageType = envelope.metadata().messageType();
         Timestamp messageTime = parseMessageTime(envelope.metadata().messageTime());
         String payloadJson = toJson(envelope);
 
-        int inserted = jdbc.update(
-                """
-                INSERT INTO messages (channel, message_number, message_type, message_time, payload)
-                VALUES (?, ?, ?, ?, ?::jsonb)
-                ON CONFLICT (channel, message_number) DO NOTHING
-                """,
-                channel,
-                messageNumber,
-                messageType,
-                messageTime,
-                payloadJson);
-
+        int inserted = repository.insertMessage(channel, messageNumber, messageType, messageTime, payloadJson);
         if (inserted == 1) {
-            jdbc.update(
-                    """
-                    INSERT INTO channel_work (channel, dirty_at)
-                    VALUES (?, now())
-                    ON CONFLICT (channel) DO UPDATE
-                    SET dirty_at = excluded.dirty_at
-                    """,
-                    channel);
+            repository.markChannelDirty(channel);
         }
     }
 

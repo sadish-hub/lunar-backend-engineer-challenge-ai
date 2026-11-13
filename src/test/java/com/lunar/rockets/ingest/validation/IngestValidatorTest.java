@@ -1,7 +1,9 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.validation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lunar.rockets.ingest.api.MessageEnvelope;
+import com.lunar.rockets.ingest.api.MessageMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -1,8 +1,8 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-record MessageEnvelope(
+public record MessageEnvelope(
         MessageMetadata metadata,
         JsonNode message
 ) {

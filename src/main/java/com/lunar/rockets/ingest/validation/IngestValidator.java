@@ -1,7 +1,9 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lunar.rockets.ingest.api.MessageEnvelope;
+import com.lunar.rockets.ingest.api.MessageType;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SchemaLocation;
@@ -14,13 +16,13 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-class IngestValidator {
+public class IngestValidator {
 
     private final ObjectMapper objectMapper;
     private final JsonSchema envelopeSchema;
     private final Map<MessageType, JsonSchema> messageSchemas;
 
-    IngestValidator(ObjectMapper objectMapper) {
+    public IngestValidator(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
         this.envelopeSchema = load(factory, "classpath:schemas/envelope.json");
@@ -31,7 +33,7 @@ class IngestValidator {
         this.messageSchemas = Map.copyOf(schemas);
     }
 
-    void validate(MessageEnvelope envelope) {
+    public void validate(MessageEnvelope envelope) {
         if (envelope == null) {
             throw new IngestValidationException("envelope required");
         }

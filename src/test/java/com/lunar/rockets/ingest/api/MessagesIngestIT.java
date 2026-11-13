@@ -1,4 +1,4 @@
-package com.lunar.rockets.ingest;
+package com.lunar.rockets.ingest.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
