@@ -3,11 +3,11 @@ package com.lunar.rockets.ingest.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lunar.rockets.ingest.api.MessageEnvelope;
-import com.lunar.rockets.ingest.persistence.MessageIngestRepository;
+import com.lunar.rockets.ingest.persistence.ChannelWorkRepository;
+import com.lunar.rockets.ingest.persistence.MessageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -16,11 +16,16 @@ import java.util.UUID;
 @Service
 public class MessageIngestService {
 
-    private final MessageIngestRepository repository;
+    private final MessageRepository messages;
+    private final ChannelWorkRepository channelWork;
     private final ObjectMapper objectMapper;
 
-    public MessageIngestService(MessageIngestRepository repository, ObjectMapper objectMapper) {
-        this.repository = repository;
+    public MessageIngestService(
+            MessageRepository messages,
+            ChannelWorkRepository channelWork,
+            ObjectMapper objectMapper) {
+        this.messages = messages;
+        this.channelWork = channelWork;
         this.objectMapper = objectMapper;
     }
 
@@ -29,12 +34,13 @@ public class MessageIngestService {
         UUID channel = UUID.fromString(envelope.metadata().channel());
         long messageNumber = envelope.metadata().messageNumber();
         String messageType = envelope.metadata().messageType();
-        Timestamp messageTime = parseMessageTime(envelope.metadata().messageTime());
+        Instant messageTime = parseMessageTime(envelope.metadata().messageTime());
         String payloadJson = toJson(envelope);
 
-        int inserted = repository.insertMessage(channel, messageNumber, messageType, messageTime, payloadJson);
+        int inserted = messages.insertIgnoreConflict(
+                channel, messageNumber, messageType, messageTime, payloadJson);
         if (inserted == 1) {
-            repository.markChannelDirty(channel);
+            channelWork.upsertDirty(channel);
         }
     }
 
@@ -46,14 +52,14 @@ public class MessageIngestService {
         }
     }
 
-    private static Timestamp parseMessageTime(String raw) {
+    private static Instant parseMessageTime(String raw) {
         try {
-            return Timestamp.from(Instant.parse(raw));
+            return Instant.parse(raw);
         } catch (DateTimeParseException ignored) {
             // fall through
         }
         try {
-            return Timestamp.from(OffsetDateTime.parse(raw).toInstant());
+            return OffsetDateTime.parse(raw).toInstant();
         } catch (DateTimeParseException ignored) {
             return null;
         }

@@ -8,7 +8,7 @@
 
 **Architecture:** Build on P0 (`messages`, `rockets`, `channel_work` via Flyway). Logic lives under package `com.lunar.rockets.ingest`. Ingest = short Postgres transaction: validate → insert `messages` (first-wins on PK) → upsert `channel_work` dirty → commit → **200**. Contiguous apply to `rockets` is **P2**. Live vendor harness smoke is **P1.1** (follows this phase). Read APIs are **P3**.
 
-**Tech stack (locked):** Java 21 · Spring Boot 3.x · Maven · Spring Web · Spring JDBC (or minimal Data JDBC) · Flyway schema from P0 · PostgreSQL · Testcontainers for IT · **networknt json-schema-validator** + classpath schemas under `src/main/resources/schemas/`
+**Tech stack (locked):** Java 21 · Spring Boot 3.x · Maven · Spring Web · **Spring Data JPA** (entities + repos; native `ON CONFLICT` for idempotent insert / `channel_work` upsert) · Flyway schema from P0 · PostgreSQL · Testcontainers for IT · **networknt json-schema-validator** + classpath schemas under `src/main/resources/schemas/`
 
 **Depends on:** P0 scaffold + DB (schema + port **8088** + empty `ingest` package).
 
@@ -163,7 +163,8 @@ src/main/resources/schemas/          # JSON Schema (loaded by validation/)
 src/main/java/com/lunar/rockets/ingest/
   api/           MessagesController, IngestExceptionHandler, MessageEnvelope/Metadata/Type
   validation/    IngestValidator, IngestValidationException (networknt → 400)
-  persistence/   MessageIngestRepository (messages insert + channel_work dirty)
+  persistence/   MessageEntity/ChannelWorkEntity + MessageRepository/ChannelWorkRepository
+                 (native ON CONFLICT insert/upsert; Flyway owns DDL, jpa ddl-auto=validate)
   service/       MessageIngestService (txn orchestration)
 
 src/test/java/com/lunar/rockets/ingest/
