@@ -1,4 +1,4 @@
 /**
- * Message ingest seam (P1). Empty in P0.
+ * Message ingest seam: {@code POST /messages} validation and durable idempotent accept.
  */
 package com.lunar.rockets.ingest;
