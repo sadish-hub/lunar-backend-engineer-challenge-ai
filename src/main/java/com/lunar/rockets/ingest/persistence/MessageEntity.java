@@ -29,6 +29,9 @@ public class MessageEntity {
     @Column(name = "accepted_at", nullable = false, insertable = false, updatable = false)
     private Instant acceptedAt;
 
+    @Column(name = "applied", nullable = false)
+    private boolean applied;
+
     protected MessageEntity() {
     }
 
@@ -37,6 +40,7 @@ public class MessageEntity {
         this.messageType = messageType;
         this.messageTime = messageTime;
         this.payload = payload;
+        this.applied = false;
     }
 
     public MessageId getId() {
@@ -57,5 +61,9 @@ public class MessageEntity {
 
     public Instant getAcceptedAt() {
         return acceptedAt;
+    }
+
+    public boolean isApplied() {
+        return applied;
     }
 }

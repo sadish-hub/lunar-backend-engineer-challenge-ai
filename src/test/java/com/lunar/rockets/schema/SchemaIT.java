@@ -69,6 +69,21 @@ class SchemaIT {
     }
 
     @Test
+    void messagesHasAppliedColumn() {
+        Integer count = jdbc.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'messages'
+                  AND column_name = 'applied'
+                """,
+                Integer.class);
+
+        assertThat(count).isEqualTo(1);
+    }
+
+    @Test
     void messagesUniqueOnChannelAndMessageNumber() {
         UUID channel = UUID.randomUUID();
 

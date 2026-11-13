@@ -14,7 +14,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~TDD + unit/integration/e2e with edge cases expected~~
 - [x] ~~YAGNI: no auth/CORS/OWASP/extra frameworks unless Driver opens~~
 - [x] ~~Living checklist exists (`docs/REQUIREMENTS_CHECKLIST.md`)~~
-- [ ] Master + per-phase plans written under `docs/plans/` and approved (P0–P1.1 approved; P2–P4 phase plans TBD)
+- [x] ~~Master + per-phase plans written under `docs/plans/` and approved (P0–P2 approved; P3–P4 phase plans TBD)~~
 - [ ] `AI_USAGE.md` with honest point time estimates
 - [ ] README runbook (build, run on 8088, APIs, tests/harness) — minimal local-up notes in P0; full runbook P4
 
@@ -39,7 +39,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Prod note (docs only): Aurora-style writer + readers for GET~~
 - [x] ~~Postgres schema / migrations implemented~~
 - [x] ~~Durable message insert on accept~~
-- [ ] Rockets current-state projection updates on apply
+- [x] ~~Rockets current-state projection updates on apply~~
 
 ---
 
@@ -51,9 +51,9 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~`rockets.version` optimistic concurrency~~
 - [x] ~~In-memory wake optional hint only (not correctness)~~
 - [x] ~~Implement durable ingest path~~
-- [ ] Implement async contiguous apply (poll/claim)
-- [ ] Multi-pod-safe claim path verified (or documented test)
-- [ ] Optional same-pod wake hint (if chosen)
+- [x] ~~Implement async contiguous apply (poll/claim)~~
+- [x] ~~Multi-pod-safe claim path verified (or documented test)~~
+- [ ] Optional same-pod wake hint (if chosen) — deferred; see `docs/NEXT_STEPS.md`
 
 **OPEN (knobs — plan-level, not coordination):** poll cadence, batch size, Spring trigger shape, exact apply txn boundaries.
 
@@ -84,10 +84,10 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~Sticky explode + still apply later contiguous messages~~
 - [x] ~~First-wins duplicates `(channel, messageNumber)` — 200, no re-apply, no 409~~
 - [x] ~~Negative `by` → 400; resulting speed may be ≤ 0 (no clamp)~~
-- [ ] Apply reducer / state machine implemented
+- [x] ~~Apply reducer / state machine implemented~~
 - [x] ~~Duplicate first-wins behavior implemented~~
-- [ ] Post-explode sticky + continue-apply implemented
-- [x] ~~Speed `by` validation + no-clamp arithmetic implemented~~ (validation in P1; no-clamp apply arithmetic remains P2)
+- [x] ~~Post-explode sticky + continue-apply implemented~~
+- [x] ~~Speed `by` validation + no-clamp arithmetic implemented~~
 
 **OPEN:** missing / late `RocketLaunched` (buffer vs invent); huge `by` / overflow (use long; document).
 
@@ -102,7 +102,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~`RocketExploded` payload: `reason`~~
 - [x] ~~`RocketMissionChanged` payload: `newMission`~~
 - [x] ~~Ingest validation via JSON Schema (`src/main/resources/schemas/`, networknt)~~
-- [ ] Out-of-order within channel handled via contiguous apply
+- [x] ~~Out-of-order within channel handled via contiguous apply~~
 - [x] ~~At-least-once / redelivery on non-2xx respected~~
 
 ---
@@ -110,8 +110,8 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 ## Harness / verification
 
 - [x] ~~Compatible with `./rockets/<platform>/rockets launch "http://localhost:8088/messages"` (defaults)~~ (P1.1: `darwin_arm64`, BRIEF-style `500ms`/`1` + stress `50ms`/`8`; see `docs/plans/p1.1-harness-smoke.md` §3.7)
-- [ ] Unit tests: apply/reducer, idempotency, transitions
-- [ ] Integration tests: POST + GET against Spring / Testcontainers as needed
+- [x] ~~Unit tests: apply/reducer, idempotency, transitions~~ (apply/reducer + apply ITs in P2; ingest covered in P1)
+- [ ] Integration tests: POST + GET against Spring / Testcontainers as needed (GET remains P3)
 - [ ] E2E / harness-oriented: out-of-order + duplicates (+ optional `./rockets/<platform>/rockets`)
 - [x] ~~Coverage bar **> 90%** (DECIDED)~~
 - [ ] Measured coverage > 90%

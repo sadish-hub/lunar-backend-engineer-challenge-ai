@@ -19,6 +19,15 @@ spring:
         jdbc:
           time_zone: UTC
 
+lunar:
+  apply:
+    enabled: true
+    poll-interval-ms: 250
+    claim-batch-size: 8
+    max-messages-per-claim: 100
+    claim-lease-seconds: 60
+    version-conflict-max-retries: 3
+
 management:
   endpoints:
     web:
@@ -27,6 +36,8 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
   health:
     db:
       enabled: true
+
