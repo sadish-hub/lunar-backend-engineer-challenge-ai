@@ -1,0 +1,37 @@
+# OS junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Build / deps (solution artifacts — not challenge harness)
+target/
+**/target/
+build/
+dist/
+out/
+node_modules/
+vendor/
+*.class
+*.jar
+*.log
+*.tmp
+.cache/
