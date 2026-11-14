@@ -32,9 +32,28 @@ Wake is **never** required for correctness: another pod, a missed hint, process 
 
 - P2 plan (poll + claim only): `docs/plans/p2-apply-scheduler.md`
 - Coordination background: `docs/SPEC.md` §4.4 / concurrency notes
+- As-built overview: `docs/ARCHITECTURE.md`
 
 ---
 
-## Other future trade-offs
+## Scale-out: split apply [@Scheduler] (future)
 
-*(Reserved — add Driver-decided prod/readiness items here as they come up.)*
+**Status:** Docs-only. Take-home stays **one** Spring Boot service (monolith with package seams).
+
+We confirmed **apply** — poll, `FOR UPDATE SKIP LOCKED` claim, contiguous `messageNumber` reduce, `rockets.version` CAS, sticky explode — holds the core logic and is where lag shows up under load. A natural next step for scale is to peel **apply** into its own service so claim workers can grow without cloning ingest/read HTTP capacity.
+
+- **Split apply** into a worker-only deployable that claims dirty channels and projects into `rockets`.
+- **Ingest stays thin:** receive, JSON Schema validate, durable first-wins insert into `messages`, dirty `channel_work`, return **200**.
+- **Read stays thin:** serve `GET /rockets` / `GET /rockets/{id}` from the projection only.
+- **Claim workers** scale as N identical instances against shared Postgres; one channel, one claimer; different channels in parallel.
+- **This challenge** does not implement the split — document for interview / prod narrative only.
+
+---
+
+## Same-pod channel parallelism in the apply scheduler (deferred)
+
+**Status:** Not implemented. Optional future throughput tweak on one pod.
+
+`ApplyWorker.runOnce` claims a batch of channels then applies them in a **serial** `for` loop. That is fine for the take-home: messages on one channel must stay ordered, and multi-pod `SKIP LOCKED` already parallelizes **across** channels via replicas.
+
+The place concurrency *does* help on a single pod is that claimed-channel loop — different channels in the batch are independent after claim. Later we can fan them out with a **bounded executor** (one thread per channel, capped concurrency) instead of the serial loop. Do **not** parallelize contiguous MN apply inside a single channel.

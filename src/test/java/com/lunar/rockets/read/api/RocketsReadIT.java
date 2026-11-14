@@ -71,12 +71,16 @@ class RocketsReadIT {
     }
 
     @Test
-    void getUnknownRocketReturns404() {
+    void getUnknownRocketReturns404() throws Exception {
         UUID unknown = UUID.randomUUID();
 
         ResponseEntity<String> response = restTemplate.getForEntity("/rockets/" + unknown, String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.path("status").asInt()).isEqualTo(404);
+        assertThat(body.path("error").asText()).isEqualTo("Not Found");
+        assertThat(body.path("message").asText()).isEqualTo("Rocket not found");
     }
 
     @Test
@@ -115,10 +119,14 @@ class RocketsReadIT {
     }
 
     @Test
-    void getMalformedUuidReturns400() {
+    void getMalformedUuidReturns400() throws Exception {
         ResponseEntity<String> response = restTemplate.getForEntity("/rockets/not-a-uuid", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.path("status").asInt()).isEqualTo(400);
+        assertThat(body.path("error").asText()).isEqualTo("Bad Request");
+        assertThat(body.path("message").asText()).isEqualTo("Invalid rocket id");
     }
 
     @Test
@@ -194,16 +202,48 @@ class RocketsReadIT {
     }
 
     @Test
-    void invalidSortReturns400() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/rockets?sort=version", String.class);
+    void invalidSortReturns400() throws Exception {
+        ResponseEntity<String> response = restTemplate.getForEntity("/rockets?sort=missionn", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.path("status").asInt()).isEqualTo(400);
+        assertThat(body.path("error").asText()).isEqualTo("Bad Request");
+        assertThat(body.path("message").asText()).isEqualTo("Invalid sort: missionn");
     }
 
     @Test
-    void invalidOrderReturns400() {
+    void methodNotAllowedReturnsApiErrorJson() throws Exception {
+        ResponseEntity<String> response = restTemplate.postForEntity("/rockets", null, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.fieldNames()).toIterable().containsExactlyInAnyOrder("status", "error", "message");
+        assertThat(body.path("status").asInt()).isEqualTo(405);
+        assertThat(body.path("error").asText()).isEqualTo("Method Not Allowed");
+        assertThat(body.path("message").asText()).contains("POST");
+    }
+
+    @Test
+    void unknownPathReturnsApiErrorJson() throws Exception {
+        ResponseEntity<String> response = restTemplate.getForEntity("/nope", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.fieldNames()).toIterable().containsExactlyInAnyOrder("status", "error", "message");
+        assertThat(body.path("status").asInt()).isEqualTo(404);
+        assertThat(body.path("error").asText()).isEqualTo("Not Found");
+        assertThat(body.path("message").asText()).isEqualTo("Not Found");
+    }
+
+    @Test
+    void invalidOrderReturns400() throws Exception {
         ResponseEntity<String> response =
                 restTemplate.getForEntity("/rockets?sort=speed&order=up", String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        JsonNode body = objectMapper.readTree(response.getBody());
+        assertThat(body.path("status").asInt()).isEqualTo(400);
+        assertThat(body.path("error").asText()).isEqualTo("Bad Request");
+        assertThat(body.path("message").asText()).isEqualTo("Invalid order: up");
     }
 
     @Test

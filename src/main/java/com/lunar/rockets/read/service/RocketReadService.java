@@ -34,7 +34,7 @@ public class RocketReadService {
     public RocketResponse get(UUID id) {
         return rockets.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rocket not found"));
     }
 
     private RocketResponse toResponse(RocketEntity entity) {

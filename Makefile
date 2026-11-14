@@ -1,6 +1,11 @@
-.PHONY: build test coverage up down run migrate smoke
+.PHONY: build test coverage up db-up down run migrate smoke e2e-harness
 
 MVN := ./mvnw
+
+# Quick smoke defaults for live harness e2e (override via env).
+E2E_MAX_MESSAGES ?= 60
+E2E_MESSAGE_DELAY ?= 100ms
+E2E_CONCURRENCY ?= 1
 
 build:
 	$(MVN) -DskipTests package
@@ -13,6 +18,9 @@ coverage: test
 	@echo "Report: target/site/jacoco/index.html"
 
 up:
+	docker compose up -d --build
+
+db-up:
 	docker compose up -d postgres
 
 down:
@@ -25,3 +33,10 @@ migrate: run
 
 smoke:
 	curl -sf http://localhost:8088/actuator/health | grep -q '"status":"UP"'
+
+# Live vendor harness → capture ALL channel IDs → poll apply → assert GET list+detail.
+e2e-harness:
+	@python3 scripts/e2e_harness.py --up \
+		--max-messages=$(E2E_MAX_MESSAGES) \
+		--message-delay=$(E2E_MESSAGE_DELAY) \
+		--concurrency-level=$(E2E_CONCURRENCY)

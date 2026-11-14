@@ -44,10 +44,13 @@ class RocketsControllerWebTest {
     @Test
     void getUnknownMapsTo404() throws Exception {
         UUID id = UUID.randomUUID();
-        when(readService.get(id)).thenThrow(new ResponseStatusException(NOT_FOUND));
+        when(readService.get(id)).thenThrow(new ResponseStatusException(NOT_FOUND, "Rocket not found"));
 
-        mockMvc.perform(get("/rockets/{id}", id))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/rockets/{id}", id).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Rocket not found"));
     }
 
     @Test
@@ -88,19 +91,28 @@ class RocketsControllerWebTest {
 
     @Test
     void invalidSortReturns400() throws Exception {
-        mockMvc.perform(get("/rockets").param("sort", "nope"))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rockets").param("sort", "missionn").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid sort: missionn"));
     }
 
     @Test
     void invalidOrderReturns400() throws Exception {
-        mockMvc.perform(get("/rockets").param("order", "sideways"))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rockets").param("order", "sideways").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid order: sideways"));
     }
 
     @Test
     void malformedUuidReturns400() throws Exception {
-        mockMvc.perform(get("/rockets/{id}", "not-a-uuid"))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/rockets/{id}", "not-a-uuid").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid rocket id"));
     }
 }

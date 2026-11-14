@@ -35,3 +35,7 @@ vendor/
 *.log
 *.tmp
 .cache/
+
+# Python
+__pycache__/
+*.py[cod]
