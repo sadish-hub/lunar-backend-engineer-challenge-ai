@@ -5,6 +5,7 @@ import java.util.Optional;
 
 public enum RocketSortField {
     ID("id"),
+    LAST_APPLIED_NUMBER("lastAppliedNumber"),
     SPEED("speed"),
     MISSION("mission"),
     TYPE("type");
@@ -20,8 +21,9 @@ public enum RocketSortField {
     }
 
     /**
-     * Parses query {@code sort} values. Missing → empty (controller defaults to {@link #ID}).
+     * Parses query {@code sort} values. Missing → empty (controller defaults to {@link #LAST_APPLIED_NUMBER}).
      * Allowed tokens: {@code speed}, {@code mission}, {@code type} (exact lowercase).
+     * {@link #LAST_APPLIED_NUMBER} and {@link #ID} are not query tokens.
      */
     public static Optional<RocketSortField> parseQuery(String raw) {
         if (raw == null || raw.isBlank()) {

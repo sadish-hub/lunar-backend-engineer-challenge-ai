@@ -130,17 +130,29 @@ class RocketsReadIT {
     }
 
     @Test
-    void defaultListOrderIsByIdAscending() throws Exception {
-        UUID a = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-        UUID b = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-        UUID c = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
-        seedRocket(c, "C", 30L, "C", false, null);
-        seedRocket(a, "A", 10L, "A", false, null);
-        seedRocket(b, "B", 20L, "B", false, null);
+    void defaultListOrderIsByLastAppliedNumberAscending() throws Exception {
+        UUID low = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        UUID mid = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        UUID high = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        seedRocket(high, "H", 30L, "H", false, null, 30L);
+        seedRocket(low, "L", 10L, "L", false, null, 1L);
+        seedRocket(mid, "M", 20L, "M", false, null, 10L);
 
         JsonNode body = objectMapper.readTree(restTemplate.getForEntity("/rockets", String.class).getBody());
 
-        assertThat(ids(body)).containsExactly(a.toString(), b.toString(), c.toString());
+        assertThat(ids(body)).containsExactly(low.toString(), mid.toString(), high.toString());
+    }
+
+    @Test
+    void defaultListOrderTiesBreakByIdAscending() throws Exception {
+        UUID a = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        UUID b = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        seedRocket(b, "B", 20L, "B", false, null, 5L);
+        seedRocket(a, "A", 10L, "A", false, null, 5L);
+
+        JsonNode body = objectMapper.readTree(restTemplate.getForEntity("/rockets", String.class).getBody());
+
+        assertThat(ids(body)).containsExactly(a.toString(), b.toString());
     }
 
     @Test
@@ -296,17 +308,29 @@ class RocketsReadIT {
 
     private void seedRocket(
             UUID id, String type, long speed, String mission, boolean exploded, String reason) {
+        seedRocket(id, type, speed, mission, exploded, reason, 1L);
+    }
+
+    private void seedRocket(
+            UUID id,
+            String type,
+            long speed,
+            String mission,
+            boolean exploded,
+            String reason,
+            long lastAppliedNumber) {
         jdbc.update(
                 """
                 INSERT INTO rockets (id, type, speed, mission, exploded, explosion_reason, last_applied_number, version)
-                VALUES (?, ?, ?, ?, ?, ?, 1, 1)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
                 """,
                 id,
                 type,
                 speed,
                 mission,
                 exploded,
-                reason);
+                reason,
+                lastAppliedNumber);
     }
 
     private static List<String> ids(JsonNode array) {

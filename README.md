@@ -39,7 +39,7 @@ Default datasource: `jdbc:postgresql://localhost:5432/lunar` (override with `SPR
 | Method | Path | Notes |
 | --- | --- | --- |
 | `POST` | `/messages` | Always **200** on accept (including first-wins duplicates). **400** malformed / unknown type / negative `by`. **5xx** transient. |
-| `GET` | `/rockets` | Empty → `200` + `[]`. Sort: `sort=speed\|mission\|type` + `order=asc\|desc` (default asc). Default order by id. Invalid sort/order → **400**. |
+| `GET` | `/rockets` | Empty → `200` + `[]`. Sort: `sort=speed\|mission\|type` + `order=asc\|desc` (default asc). Default order by `last_applied_number` (id tie-break). Invalid sort/order → **400**. |
 | `GET` | `/rockets/{id}` | Applied projection fields. Unknown → **404**. |
 
 Client errors (**400** / **404**) and ingest **503** return JSON: `{"status":…,"error":"…","message":"…"}` (e.g. invalid sort → `"Invalid sort: missionn"`).

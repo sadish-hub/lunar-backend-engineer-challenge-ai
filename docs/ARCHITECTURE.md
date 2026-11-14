@@ -189,7 +189,7 @@ Virtual threads: `spring.threads.virtual.enabled=true` — request handling on J
 | Method | Path | Success / notes |
 | --- | --- | --- |
 | `POST` | `/messages` | **200** accept (incl. duplicates); **400** schema/malformed; **503** transient |
-| `GET` | `/rockets` | **200** list (`[]` if empty); sort `sort` + `order`; invalid → **400** |
+| `GET` | `/rockets` | **200** list (`[]` if empty); sort `sort` + `order` (default `last_applied_number`); invalid → **400** |
 | `GET` | `/rockets/{id}` | **200** projection; unknown → **404** |
 
 Error body (`com.lunar.rockets.api.ApiError`):

@@ -175,7 +175,7 @@ Base: service on port **8088** for harness compatibility.
 - List sorting (brief: “preferably with some kind of sorting”):
   - `GET /rockets?sort=speed|mission|type` (or `sortBy`)
   - `order=asc|desc` (default `asc`)
-  - Default sort: by `id` / channel for stability
+  - Default sort: by `last_applied_number` ascending (id / channel tie-break)
 - **404** for `GET /rockets/{id}` when the rocket is unknown (not empty body / 200).
 - **No pagination** for this challenge scale.
 
@@ -316,7 +316,7 @@ Numbered list — please decide before implementation / master plan:
 3. **Gap handling / apply strategy** — **DECIDED** (option 3 + **B**): durable insert → **200**; contiguous apply async via **Postgres poll/claim (`FOR UPDATE SKIP LOCKED`)** on dirty channels and/or unapplied messages; per-channel exclusive apply; optional local wake hint only. **Rejected:** sync giant-txn apply on ingest; **in-memory-only work queue as sole coordinator** (not multi-pod safe). See §4.4 / §6. **OPEN (knobs only):** poll cadence, batch size, Spring trigger shape, exact apply txn boundaries — not coordination strategy.
 4. **HTTP success codes** — **DECIDED**: always **200** for accepted `POST /messages` (including idempotent duplicates); **400** for malformed / unknown type; **5xx** for transient. See §4.5.
 5. **Deployment topology** — **DECIDED**: single Spring Boot deployable; logical packages `ingest` / `apply` / `read`; **scale by replicas**; no multi-module or microservices for the exercise; README may note a future split. See §6.
-6. **API paths, list sort, 404, pagination** — **DECIDED**: `POST /messages`, `GET /rockets`, `GET /rockets/{id}`; sort via `sort=speed|mission|type` (or `sortBy`) + `order=asc|desc` (default `asc`), default sort by `id`/channel; **404** for unknown rocket; **no pagination**. See §5.
+6. **API paths, list sort, 404, pagination** — **DECIDED**: `POST /messages`, `GET /rockets`, `GET /rockets/{id}`; sort via `sort=speed|mission|type` (or `sortBy`) + `order=asc|desc` (default `asc`), default sort by `last_applied_number` (id/channel tie-break); **404** for unknown rocket; **no pagination**. See §5.
 7. **Response shape**: fields to expose (`exploded`, timestamps, `lastMessageNumber`, etc.).
 8. **Post-explode / first-wins / speed `by` & resulting speed / missing launch** — partially decided:
    - **DECIDED — post-explode:** sticky `exploded` flag; still apply later contiguous events. See §3.3 / §7.

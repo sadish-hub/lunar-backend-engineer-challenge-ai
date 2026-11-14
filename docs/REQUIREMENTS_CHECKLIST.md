@@ -65,7 +65,7 @@ Living checklist derived from `docs/BRIEF.md` + `docs/SPEC.md`.
 - [x] ~~POST success always **200** (incl. idempotent duplicates); not 202/204~~
 - [x] ~~**400** malformed JSON / unknown type / missing fields / negative `by`~~
 - [x] ~~**5xx** transient (e.g. 503) so harness retries~~
-- [x] ~~List sort: `sort=speed|mission|type` (or `sortBy`) + `order=asc|desc` (default asc); default by id/channel~~
+- [x] ~~List sort: `sort=speed|mission|type` (or `sortBy`) + `order=asc|desc` (default asc); default by `last_applied_number` (id tie-break)~~
 - [x] ~~**404** for unknown `GET /rockets/{id}`~~
 - [x] ~~No pagination~~
 - [x] ~~Implement `POST /messages`~~

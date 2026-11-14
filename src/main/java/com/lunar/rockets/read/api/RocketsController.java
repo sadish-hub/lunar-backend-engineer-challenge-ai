@@ -24,7 +24,7 @@ public class RocketsController {
     public List<RocketResponse> list(
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
-        RocketSortField sortField = RocketSortField.parseQuery(sort).orElse(RocketSortField.ID);
+        RocketSortField sortField = RocketSortField.parseQuery(sort).orElse(RocketSortField.LAST_APPLIED_NUMBER);
         SortOrder sortOrder = SortOrder.parseQuery(order);
         return readService.list(sortField, sortOrder);
     }

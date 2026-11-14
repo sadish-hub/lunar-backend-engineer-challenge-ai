@@ -34,7 +34,7 @@ class RocketsControllerWebTest {
 
     @Test
     void emptyListReturnsJsonArray() throws Exception {
-        when(readService.list(RocketSortField.ID, SortOrder.ASC)).thenReturn(List.of());
+        when(readService.list(RocketSortField.LAST_APPLIED_NUMBER, SortOrder.ASC)).thenReturn(List.of());
 
         mockMvc.perform(get("/rockets").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -80,13 +80,13 @@ class RocketsControllerWebTest {
     }
 
     @Test
-    void omittedSortDefaultsToIdAsc() throws Exception {
-        when(readService.list(RocketSortField.ID, SortOrder.ASC)).thenReturn(List.of());
+    void omittedSortDefaultsToLastAppliedNumberAsc() throws Exception {
+        when(readService.list(RocketSortField.LAST_APPLIED_NUMBER, SortOrder.ASC)).thenReturn(List.of());
 
         mockMvc.perform(get("/rockets"))
                 .andExpect(status().isOk());
 
-        verify(readService).list(eq(RocketSortField.ID), eq(SortOrder.ASC));
+        verify(readService).list(eq(RocketSortField.LAST_APPLIED_NUMBER), eq(SortOrder.ASC));
     }
 
     @Test

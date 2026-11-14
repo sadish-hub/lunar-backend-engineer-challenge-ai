@@ -48,6 +48,19 @@ class RocketReadServiceTest {
     }
 
     @Test
+    void listByLastAppliedNumberUsesIdTieBreak() {
+        when(rockets.findAll(any(Sort.class))).thenReturn(List.of());
+
+        service.list(RocketSortField.LAST_APPLIED_NUMBER, SortOrder.ASC);
+
+        ArgumentCaptor<Sort> sortCaptor = ArgumentCaptor.forClass(Sort.class);
+        verify(rockets).findAll(sortCaptor.capture());
+        Sort sort = sortCaptor.getValue();
+        assertThat(sort.getOrderFor("lastAppliedNumber").getDirection()).isEqualTo(Sort.Direction.ASC);
+        assertThat(sort.getOrderFor("id").getDirection()).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
     void getMapsEntityToResponse() {
         UUID id = UUID.randomUUID();
         when(rockets.findById(id)).thenReturn(Optional.of(

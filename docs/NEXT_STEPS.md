@@ -57,3 +57,17 @@ We confirmed **apply** — poll, `FOR UPDATE SKIP LOCKED` claim, contiguous `mes
 `ApplyWorker.runOnce` claims a batch of channels then applies them in a **serial** `for` loop. That is fine for the take-home: messages on one channel must stay ordered, and multi-pod `SKIP LOCKED` already parallelizes **across** channels via replicas.
 
 The place concurrency *does* help on a single pod is that claimed-channel loop — different channels in the batch are independent after claim. Later we can fan them out with a **bounded executor** (one thread per channel, capped concurrency) instead of the serial loop. Do **not** parallelize contiguous MN apply inside a single channel.
+
+---
+
+## Review findings (interview notes; no code fix)
+
+Left as discussable edges from review — not a fix backlog for this take-home.
+
+- **Poison / forever-dirty:** if MN1 is not `RocketLaunched`, fail-closed apply throws → claim released dirty → channel can loop forever (same for other unrecoverable apply `RuntimeException`s). Domain OPEN / fail-closed by design; prod would want DLQ / skip / mark-poisoned.
+- **404 until apply:** ingest **200** means accepted, not projected; `GET /rockets/{id}` reads `rockets` only, so unknown until contiguous apply creates the row.
+- **MN0:** schema allows integer `messageNumber` without `minimum: 1`; MN0 is never selected by `last_applied+1` starting at 0→1, yet can keep `hasUnapplied` / dirty noise.
+- **`messageTime` → NULL:** present string required; parse is optional — unparsable values store NULL (SPEC).
+- **`sort=id` → 400:** allowed query values are `speed|mission|type`; omit `sort` to get default order by `last_applied_number` (id tie-break).
+- **Explode reason overwrite:** sticky means later *other* events keep exploded; a second applied `RocketExploded` still overwrites `explosionReason` (harness sends explode once; same-MN dupes are first-wins at ingest).
+- **Checklist `sortBy`:** SPEC says `sort` or `sortBy`; P3 shipped `sort` only (YAGNI alias).
